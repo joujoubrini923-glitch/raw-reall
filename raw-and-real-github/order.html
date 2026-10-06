@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Order — Raw & Real</title>
+<link rel="icon" href="img/logo.png">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<main>
+  <div class="page-head">
+    <div class="wrap">
+      <div class="crumbs"><a href="index.html">Home</a> / Order</div>
+      <div class="eyebrow">No account needed</div>
+      <h1 class="display">Make it <span class="gold">yours</span></h1>
+      <p>Fill in the form below. We'll contact you by email or phone to confirm your order, then you pay cash on delivery.</p>
+    </div>
+    <div class="bg">ORDER</div>
+  </div>
+
+  <div class="wrap" style="padding-top:50px">
+    <div class="steps reveal">
+      <div class="step"><b>01</b><div><strong>Fill the form</strong>Name, age, city, email and your size.</div></div>
+      <div class="step"><b>02</b><div><strong>We confirm</strong>Our team contacts you within 24h.</div></div>
+      <div class="step"><b>03</b><div><strong>Delivery</strong>Receive it at your door and pay on delivery.</div></div>
+    </div>
+  </div>
+
+  <div class="wrap order-grid" style="padding-top:0">
+    <aside class="summary reveal" id="summary"></aside>
+    <form id="orderForm" class="form-card reveal" name="order" method="POST" data-netlify="true" netlify-honeypot="website" novalidate>
+      <input type="hidden" name="form-name" value="order">
+      <p style="display:none"><label>Website <input name="website"></label></p>
+      <h2 class="display">Your details</h2>
+      <p>Fields marked * are required.</p>
+      <div class="fgrid">
+        <div class="field full"><label class="label" for="name">Full name *</label><input id="name" name="name" required placeholder="Your name"></div>
+        <div class="field"><label class="label" for="age">Age *</label><input id="age" name="age" type="number" min="10" max="100" required placeholder="20"></div>
+        <div class="field"><label class="label" for="city">City *</label><input id="city" name="city" required placeholder="Sfax"></div>
+        <div class="field full"><label class="label" for="email">Email *</label><input id="email" name="email" type="email" required placeholder="you@email.com"></div>
+        <div class="field full"><label class="label" for="phone">Phone (optional, faster confirmation)</label><input id="phone" name="phone" placeholder="+216 ..."></div>
+        <div class="field"><label class="label" for="product">Article *</label><select id="product" name="productId" required></select></div>
+        <div class="field"><label class="label" for="size">Size *</label><select id="size" name="size" required></select></div>
+        <div class="field"><label class="label" for="qty">Quantity</label><select id="qty" name="qty"><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></div>
+        <div class="field full"><label class="label" for="note">Note (optional)</label><textarea id="note" name="note" placeholder="Delivery address, preferences, anything else…"></textarea></div>
+      </div>
+      <div class="form-foot">
+        <small>We only use your information to process this order.</small>
+        <button class="btn btn-gold" type="submit" id="submitBtn">Place order</button>
+      </div>
+      <div class="msg" id="msg"></div>
+    </form>
+  </div>
+</main>
+
+<script src="js/app.js"></script>
+<script>
+RR.mount('order.html');
+let products = [], product;
+const $ = id => document.getElementById(id);
+
+RR.getProducts().then(ps => {
+  products = ps;
+  const q = new URLSearchParams(location.search);
+  product = ps.find(x => x.id === q.get('id')) || ps[0];
+  $('product').innerHTML = ps.map(p => `<option value="${p.id}" ${p.id===product.id?'selected':''}>${p.name} — ${p.price} ${p.currency}</option>`).join('');
+  fillSizes(q.get('size'));
+  ['product', 'size', 'qty'].forEach(id => $(id).addEventListener('change', () => { if (id === 'product') { product = ps.find(x => x.id === $('product').value); fillSizes(); } summary(); }));
+  summary();
+});
+function fillSizes(pre) { $('size').innerHTML = '<option value="">Choose a size</option>' + product.sizes.map(s => `<option ${s===pre?'selected':''}>${s}</option>`).join(''); }
+function summary() {
+  const qty = +$('qty').value || 1;
+  $('summary').innerHTML = `
+    <img src="${product.images[0]}" alt="">
+    <div class="eyebrow">Order summary</div>
+    <h3 class="display" style="font-size:1.8rem;margin:8px 0 14px">${product.name}</h3>
+    <div class="row"><span>Price</span><b>${product.price} ${product.currency}</b></div>
+    <div class="row"><span>Size</span><b>${$('size').value || '—'}</b></div>
+    <div class="row"><span>Quantity</span><b>${qty}</b></div>
+    <div class="row"><span>Delivery</span><b class="green">To be confirmed</b></div>
+    <div class="row total"><span>Total</span><b>${product.price*qty} ${product.currency}</b></div>
+    <div class="row" style="border:0;padding-top:14px;font-size:.8rem">💵 Cash on delivery · 🚚 All Tunisia</div>`;
+}
+$('orderForm').addEventListener('submit', async e => {
+  e.preventDefault();
+  const f = e.target, msg = $('msg'), btn = $('submitBtn');
+  const d = Object.fromEntries(new FormData(f).entries());
+  msg.className = 'msg';
+  if (!d.name.trim() || !d.city.trim() || !d.email.trim() || !d.age) return err('Please fill in all required fields.');
+  if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(d.email)) return err('Please enter a valid email address.');
+  if (d.age < 10 || d.age > 100) return err('Please enter a valid age.');
+  if (!d.size) return err('Please choose a size.');
+  btn.disabled = true; btn.textContent = 'Sending…';
+  try {
+    const r = await RR.submitOrder(d);
+    msg.className = 'msg ok';
+    msg.innerHTML = `✦ Thank you, <b>${RR.esc(d.name)}</b>! Order <b>${r.id}</b> received. We'll contact you at <b>${RR.esc(d.email)}</b> to confirm. Stay real.`;
+    f.reset(); fillSizes(); summary(); window.scrollTo({ top: msg.offsetTop - 120, behavior: 'smooth' });
+  } catch (x) { err(x.message || 'Something went wrong, please try again.'); }
+  btn.disabled = false; btn.textContent = 'Place order';
+  function err(t) { msg.className = 'msg err'; msg.textContent = t; }
+});
+</script>
+</body>
+</html>

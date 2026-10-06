@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Shop — Raw & Real</title>
+<link rel="icon" href="img/logo.png">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<main>
+  <div class="page-head">
+    <div class="wrap">
+      <div class="crumbs"><a href="index.html">Home</a> / Shop</div>
+      <div class="eyebrow">All articles</div>
+      <h1 class="display">The <span class="gold">shop</span></h1>
+      <p>Every piece is designed in Sfax, printed in Sfax, and shipped anywhere in Tunisia. Cash on delivery.</p>
+    </div>
+    <div class="bg">SHOP</div>
+  </div>
+
+  <section class="wrap">
+    <div class="grid-products" id="list"></div>
+  </section>
+</main>
+
+<script src="js/app.js"></script>
+<script>
+RR.mount('shop.html');
+RR.getProducts().then(ps => {
+  document.getElementById('list').innerHTML = ps.map(p => `
+    <a class="pcard" href="product.html?id=${p.id}">
+      <div class="media"><span class="badge">${p.badge}</span><img src="${p.images[0]}" alt="${p.name}"><img class="hover" src="${p.images[1]}" alt=""></div>
+      <div class="body"><h3>${p.name}</h3><div class="tag">“${p.tagline}”</div>
+        <div class="muted" style="font-size:.85rem">Sizes: ${p.sizes.join(' · ')}</div>
+        <div class="foot"><div class="price">${p.price}<small>${p.currency}</small></div><span class="btn btn-gold btn-sm">View & order</span></div></div>
+    </a>`).join('');
+});
+</script>
+</body>
+</html>

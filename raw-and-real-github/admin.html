@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin — Raw & Real</title>
+<meta name="robots" content="noindex">
+<link rel="icon" href="img/logo.png">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<main>
+<div id="loginView" class="login">
+  <form id="loginForm" class="form-card">
+    <img class="logo" src="img/logo.png" alt="">
+    <div class="eyebrow" style="justify-content:center">Raw & Real</div>
+    <h1 class="display" style="font-size:2.8rem;margin:8px 0 22px">Admin access</h1>
+    <div class="field"><input id="pw" type="password" placeholder="Password" required autofocus></div>
+    <button class="btn btn-gold" style="width:100%;margin-top:16px" type="submit">Enter</button>
+    <div class="msg" id="loginMsg"></div>
+    <p style="margin-top:20px"><a href="index.html" class="muted" style="font-size:.85rem">← Back to store</a></p>
+  </form>
+</div>
+
+<div id="adminView" class="wrap" style="display:none;padding-bottom:60px">
+  <div class="topbar">
+    <a class="brand" href="index.html"><img src="img/logo.png" alt=""><span>Raw <em>&</em> Real <span class="muted" style="font-size:1rem;letter-spacing:.2em">· ORDERS</span></span></a>
+    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+      <span class="pill" id="mode"></span>
+      <button class="btn btn-ghost btn-sm" onclick="exportCSV()">Export CSV</button>
+      <button class="btn btn-ghost btn-sm" onclick="loadOrders()">Refresh</button>
+      <button class="btn btn-ghost btn-sm" onclick="logout()">Logout</button>
+    </div>
+  </div>
+  <div class="kpis" id="kpis"></div>
+  <div class="tools">
+    <input id="q" placeholder="Search name, email, city, order id…" oninput="render()">
+    <select id="fstatus" onchange="render()">
+      <option value="">All statuses</option><option value="new">New</option><option value="contacted">Contacted</option><option value="delivered">Delivered</option><option value="cancelled">Cancelled</option>
+    </select>
+  </div>
+  <div class="tbl" id="tbl"></div>
+</div>
+</main>
+
+<script src="js/app.js"></script>
+<script>
+RR.transitions();
+// Password used when the site is opened WITHOUT the server (static mode). With the server, ADMIN_PASSWORD env wins.
+const LOCAL_PASSWORD = 'rawreal2026';
+let token = sessionStorage.getItem('rr_token'), orders = [];
+const H = () => ({ 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' });
+const $ = id => document.getElementById(id);
+const local = () => JSON.parse(localStorage.getItem(RR.LS) || '[]');
+const saveLocal = o => localStorage.setItem(RR.LS, JSON.stringify(o));
+
+$('loginForm').addEventListener('submit', async e => {
+  e.preventDefault();
+  const m = $('loginMsg'); m.className = 'msg';
+  const pw = $('pw').value;
+  if (RR.isServer) {
+    try {
+      const r = await fetch('api/admin/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ password: pw }) });
+      if ((r.headers.get('content-type') || '').includes('application/json')) {
+        if (!r.ok) { m.className = 'msg err'; m.textContent = 'Wrong password.'; return; }
+        token = (await r.json()).token; sessionStorage.setItem('rr_token', token); return show();
+      }
+    } catch (x) {}
+  }
+  if (pw !== LOCAL_PASSWORD) { m.className = 'msg err'; m.textContent = 'Wrong password.'; return; }
+  token = 'local'; sessionStorage.setItem('rr_token', token); show();
+});
+
+function show() { $('loginView').style.display = 'none'; $('adminView').style.display = 'block'; $('mode').textContent = token === 'local' ? 'Browser storage · full list in Netlify › Forms' : 'Server connected'; $('mode').className = 'pill' + (token === 'local' ? '' : ' on'); loadOrders(); }
+async function loadOrders() {
+  if (token === 'local') { orders = local(); return render(); }
+  const r = await fetch('api/admin/orders', { headers: H() });
+  if (r.status === 401) return logout(true);
+  orders = await r.json(); render();
+}
+function render() {
+  const q = $('q').value.toLowerCase(), fs = $('fstatus').value;
+  const list = orders.filter(o => (!fs || o.status === fs) && (!q || [o.name, o.email, o.city, o.id, o.phone].join(' ').toLowerCase().includes(q)));
+  const rev = orders.filter(o => o.status !== 'cancelled').reduce((s, o) => s + o.total, 0);
+  $('kpis').innerHTML = `
+    <div class="kpi"><b>${orders.length}</b><span>Total orders</span></div>
+    <div class="kpi"><b>${orders.filter(o=>o.status==='new').length}</b><span>New · to contact</span></div>
+    <div class="kpi"><b>${orders.filter(o=>o.status==='delivered').length}</b><span>Delivered</span></div>
+    <div class="kpi"><b>${rev} <small style="font-size:1rem">TND</small></b><span>Revenue (non-cancelled)</span></div>`;
+  if (!list.length) { $('tbl').innerHTML = '<div class="empty">No orders in this browser yet. On Netlify, every order is also saved under <b>Site → Forms → order</b> (with email notifications).</div>'; return; }
+  const e = RR.esc;
+  $('tbl').innerHTML = `<table><thead><tr><th>Order</th><th>Customer</th><th>Contact</th><th>City</th><th>Article</th><th>Total</th><th>Status</th><th></th></tr></thead><tbody>` +
+    list.map(o => `<tr>
+      <td class="id">${o.id}<div class="sub">${new Date(o.createdAt).toLocaleString()}</div></td>
+      <td><b>${e(o.name)}</b><div class="sub">Age ${e(o.age)}</div></td>
+      <td><a href="mailto:${e(o.email)}" class="gold">${e(o.email)}</a>${o.phone?`<div class="sub">${e(o.phone)}</div>`:''}</td>
+      <td>${e(o.city)}</td>
+      <td>${e(o.productName)}<div class="sub">Size ${e(o.size)||'—'} × ${o.qty}${o.note?`<br><i>“${e(o.note)}”</i>`:''}</div></td>
+      <td><b>${o.total} TND</b></td>
+      <td><select class="status ${o.status}" onchange="setStatus('${o.id}',this.value)">${['new','contacted','delivered','cancelled'].map(s=>`<option ${s===o.status?'selected':''}>${s}</option>`).join('')}</select></td>
+      <td><button class="del" title="Delete" onclick="del('${o.id}')">✕</button></td>
+    </tr>`).join('') + '</tbody></table>';
+}
+async function setStatus(id, status) {
+  if (token === 'local') { const o = local(); (o.find(x => x.id === id) || {}).status = status; saveLocal(o); return loadOrders(); }
+  await fetch('api/admin/orders/' + id, { method: 'PATCH', headers: H(), body: JSON.stringify({ status }) }); loadOrders();
+}
+async function del(id) {
+  if (!confirm('Delete order ' + id + '?')) return;
+  if (token === 'local') { saveLocal(local().filter(x => x.id !== id)); return loadOrders(); }
+  await fetch('api/admin/orders/' + id, { method: 'DELETE', headers: H() }); loadOrders();
+}
+async function logout(silent) { if (!silent && token !== 'local') await fetch('api/admin/logout', { method: 'POST', headers: H() }); sessionStorage.removeItem('rr_token'); location.reload(); }
+function exportCSV() {
+  const cols = ['id','createdAt','name','age','city','email','phone','productName','size','qty','total','status','note'];
+  const csv = [cols.join(',')].concat(orders.map(o => cols.map(c => `"${String(o[c]??'').replace(/"/g,'""')}"`).join(','))).join('\n');
+  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' })); a.download = 'raw-and-real-orders.csv'; a.click();
+}
+if (token) show();
+</script>
+</body>
+</html>

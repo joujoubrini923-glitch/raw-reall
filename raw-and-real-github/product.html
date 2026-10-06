@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sfax Heritage Tee — Raw & Real</title>
+<link rel="icon" href="img/logo.png">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<main>
+  <div class="wrap" style="padding-top:30px"><div class="crumbs"><a href="index.html">Home</a> / <a href="shop.html">Shop</a> / <span id="crumb">Product</span></div></div>
+  <div class="wrap product" id="product"></div>
+
+  <section class="sec-alt">
+    <div class="wrap">
+      <div class="sec-head reveal"><div><div class="eyebrow">On the streets</div><h2 class="display">Worn in the Medina</h2></div></div>
+      <div class="look reveal">
+        <div><img src="img/lb-model-4.jpg" alt=""></div>
+        <div><img src="img/lb-tall.jpg" alt=""></div>
+        <div><img src="img/lb-model-2.jpg" alt=""></div>
+        <div><img src="img/lb-gate.jpg" alt=""></div>
+        <div><img src="img/lb-texture.jpg" alt=""></div>
+      </div>
+    </div>
+  </section>
+</main>
+<div class="lightbox" id="lb" onclick="this.classList.remove('open')"><img id="lbImg" alt=""></div>
+
+<script src="js/app.js"></script>
+<script>
+RR.mount('product.html');
+let size = '';
+RR.getProducts().then(ps => {
+  const id = new URLSearchParams(location.search).get('id');
+  const p = ps.find(x => x.id === id) || ps[0];
+  document.title = p.name + ' — Raw & Real';
+  document.getElementById('crumb').textContent = p.name;
+  document.getElementById('product').innerHTML = `
+    <div class="gallery">
+      <div class="gallery-main" onclick="zoom()"><span class="badge">${p.badge}</span><img id="mainImg" src="${p.images[0]}" alt="${p.name}"></div>
+      <div class="thumbs">${p.images.map((im, i) => `<button class="${i===0?'active':''}" onclick="setImg(this,'${im}')"><img src="${im}" alt=""></button>`).join('')}</div>
+    </div>
+    <div class="pinfo">
+      <div class="eyebrow">Oversized tee · ${p.badge}</div>
+      <h1 class="display">${p.name}</h1>
+      <div class="tag">“${p.tagline}”</div>
+      <div class="price">${p.price}<small>${p.currency}</small></div>
+      <p class="desc">${p.description}</p>
+      <ul class="details">${p.details.map(d => `<li>${d}</li>`).join('')}</ul>
+      <div class="label">Select your size</div>
+      <div class="sizes" id="sizes">${p.sizes.map(s => `<button type="button" onclick="pick('${s}',this)">${s}</button>`).join('')}</div>
+      <div style="display:flex;gap:12px;flex-wrap:wrap">
+        <a class="btn btn-gold" id="orderBtn" href="order.html?id=${p.id}">Order now — ${p.price} ${p.currency}</a>
+        <a class="btn btn-ghost" href="shop.html">Back to shop</a>
+      </div>
+      <div class="trust">
+        <div><b>🚚</b>Delivery all Tunisia</div>
+        <div><b>💵</b>Cash on delivery</div>
+        <div><b>✦</b>Made in Sfax</div>
+      </div>
+    </div>`;
+});
+function setImg(btn, src) { const i = document.getElementById('mainImg'); i.style.opacity = 0; setTimeout(() => { i.src = src; i.style.opacity = 1; }, 160); document.querySelectorAll('.thumbs button').forEach(b => b.classList.remove('active')); btn.classList.add('active'); }
+function pick(s, btn) { size = s; document.querySelectorAll('#sizes button').forEach(b => b.classList.toggle('active', b === btn)); const a = document.getElementById('orderBtn'); a.href = a.href.split('&size')[0] + '&size=' + s; }
+function zoom() { document.getElementById('lbImg').src = document.getElementById('mainImg').src; document.getElementById('lb').classList.add('open'); }
+</script>
+</body>
+</html>

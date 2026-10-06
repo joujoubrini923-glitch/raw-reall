@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Raw & Real — Streetwear from Sfax, Tunisia</title>
+<meta name="description" content="Raw & Real. For those who embrace the raw and stay real. Premium streetwear designed in Sfax, Tunisia.">
+<link rel="icon" href="img/logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<main>
+
+  <!-- HERO -->
+  <section class="hero wrap">
+    <div>
+      <div class="eyebrow">Sfax, Tunisia · Drop 01 is live</div>
+      <h1 class="display">Embrace<br>the <span class="outline">raw.</span><br>Stay <span class="gold">real.</span></h1>
+      <p>Heavyweight streetwear built around the stories of our city. Our first piece honours Sfax — its calligraphy, its walls, its grandeur.</p>
+      <div class="hero-actions">
+        <a class="btn btn-gold" href="product.html">Discover the Sfax Tee</a>
+        <a class="btn btn-ghost" href="order.html">Order now</a>
+      </div>
+      <div class="stats">
+        <div><b>01</b>Drop</div>
+        <div><b>240<span style="font-size:1rem">gsm</span></b>Heavy cotton</div>
+        <div><b>100%</b>Made in Sfax</div>
+      </div>
+    </div>
+    <div class="hero-visual reveal">
+      <div class="hero-ring"></div>
+      <div class="frame"><img src="img/hero-main.jpg" alt="Sfax tee back print"></div>
+      <div class="frame-2"><img src="img/look-3-sq.jpg" alt=""></div>
+      <div class="hero-badge">
+        <img src="img/logo.png" alt="">
+        <div><b>Raw & Real</b><small>@raw_and_real2</small></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- MARQUEE -->
+  <div class="marquee"><div class="marquee-track">
+    <span>Raw & Real <i>✦</i></span><span>Sfax · صفاقس <i>✦</i></span><span>The city of grandeur and antiquity <i>✦</i></span><span>Drop 01 <i>✦</i></span>
+    <span>Raw & Real <i>✦</i></span><span>Sfax · صفاقس <i>✦</i></span><span>The city of grandeur and antiquity <i>✦</i></span><span>Drop 01 <i>✦</i></span>
+  </div></div>
+
+  <!-- FEATURED PRODUCT -->
+  <section class="wrap">
+    <div class="sec-head reveal">
+      <div><div class="eyebrow">The Drop</div><h2 class="display">Our first piece</h2></div>
+      <p>One article, made with intention. More drops are coming — follow us on Instagram to be first.</p>
+    </div>
+    <div id="featured"></div>
+  </section>
+
+  <!-- WHY -->
+  <section class="sec-alt">
+    <div class="wrap">
+      <div class="sec-head reveal">
+        <div><div class="eyebrow">Why Raw & Real</div><h2 class="display">Built different</h2></div>
+      </div>
+      <div class="feats">
+        <div class="feat reveal"><div class="ic">◈</div><h3>Heavyweight quality</h3><p>240 gsm premium cotton, high-density prints that don't crack. Made to be worn for years, not seasons.</p></div>
+        <div class="feat reveal"><div class="ic">✦</div><h3>Rooted in Sfax</h3><p>Every design tells a story from our city — its calligraphy, its gates, its medina. Designed and printed locally.</p></div>
+        <div class="feat reveal"><div class="ic">◆</div><h3>No account, no hassle</h3><p>Fill a simple form, we contact you, you pay on delivery. Shipping across all of Tunisia.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- LOOKBOOK -->
+  <section id="lookbook" class="wrap">
+    <div class="sec-head reveal">
+      <div><div class="eyebrow">Lookbook</div><h2 class="display">Shot in the Medina</h2></div>
+      <p>Between the souks and the stone arches of Sfax's old city.</p>
+    </div>
+    <div class="look reveal">
+      <div><img src="img/lb-model-1.jpg" alt=""></div>
+      <div><img src="img/lb-tall.jpg" alt=""></div>
+      <div><img src="img/lb-texture.jpg" alt=""></div>
+      <div><img src="img/lb-model-3.jpg" alt=""></div>
+      <div><img src="img/lb-gate.jpg" alt=""></div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <div class="wrap"><div class="cta reveal">
+    <div class="eyebrow">Limited first drop</div>
+    <h2 class="display">Make it <span class="gold">yours</span></h2>
+    <p>No account needed. Complete the order form and we'll reach out to confirm your size and delivery.</p>
+    <a class="btn btn-gold" href="order.html">Order the Sfax Tee — 59 TND</a>
+  </div></div>
+
+</main>
+
+<script src="js/app.js"></script>
+<script>
+RR.mount('index.html');
+RR.getProducts().then(ps => {
+  document.getElementById('featured').innerHTML = ps.map(p => `
+    <div class="featured reveal in">
+      <a class="f-media" href="product.html?id=${p.id}"><span class="badge">${p.badge}</span><img src="${p.images[0]}" alt="${p.name}"><img class="hover" src="${p.images[2]}" alt=""></a>
+      <div class="f-body">
+        <div class="eyebrow">Oversized tee · Drop 01</div>
+        <h3 class="display">${p.name}</h3>
+        <div class="tag">“${p.tagline}”</div>
+        <p>${p.description}</p>
+        <ul class="details">${p.details.slice(0,3).map(d => `<li>${d}</li>`).join('')}</ul>
+        <div class="f-foot"><div class="price">${p.price}<small>${p.currency}</small></div>
+          <div style="display:flex;gap:10px;flex-wrap:wrap"><a class="btn btn-gold" href="order.html?id=${p.id}">Order now</a><a class="btn btn-ghost" href="product.html?id=${p.id}">Details</a></div></div>
+      </div>
+    </div>`).join('');
+});
+</script>
+</body>
+</html>
